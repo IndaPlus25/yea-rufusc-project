@@ -15,7 +15,7 @@ This project is going to be the classic game Tetris, no fancy twists here.
 ## Features
 
 ### MVP:
-* **Grid-system**: The state of the game board is saved in a 2D array (`Color[][]`) that tracks if a block is empty (`null`) or occupied by a specific color.
+* **Grid-system**: The state of the game board is saved in a 2D array (`Color[][]`) that tracks if a block is empty (`black color`) or occupied by a specific color.
 * **Graphic representation**: A `Board` class (JPanel) that renders the grid and the active piece using `paintComponent`.
 * **7 different shapes**: I, J, L, O, S, T, and Z. Shapes have a rotation variable and coordinates of an “anchor piece” (pivot point) to keep track of them.
 * **Collision detection**: Before movement or rotation, the game checks if the new position is within bounds and not occupied by the 2D array.
