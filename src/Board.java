@@ -3,6 +3,9 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -11,6 +14,7 @@ import javax.swing.Timer;
  * Provides functionality to manage and reset the board state.
  */
 public class Board extends JPanel implements ActionListener{
+    private List<Shapes.TetrominoType> bag = new ArrayList();
     final static int col = 10;
     final static int row = 20;
     private Color[][] grid = new Color[row][col];
@@ -20,6 +24,7 @@ public class Board extends JPanel implements ActionListener{
     final static int delay = 500;
     private Timer timer;
     private Shapes activePiece;
+    private boolean isGameRunning;
 
     /**
    * Constructs a new Board and initializes the preferred size and background color.
@@ -38,6 +43,7 @@ public class Board extends JPanel implements ActionListener{
      * Starts the game loop.
      */
     public void startGame(){
+        isGameRunning = true;
         spawnNewPiece();
         timer.start();
     }
@@ -72,7 +78,13 @@ public class Board extends JPanel implements ActionListener{
         super.paintComponent(g);
 
         drawBoard(g);
-       // drawActivePiece(g); Behöver ha funktion för att hämta piece i shape annars kan denna funk inte köras
+
+        if(isGameRunning){
+            drawActivePiece(g);
+        }
+        else{
+            //draw start menu.
+        }
     }
 
     /**
@@ -121,8 +133,26 @@ public class Board extends JPanel implements ActionListener{
             g.setColor(Color.CYAN);
         }
     }
+    
+    /**
+     * Refills the bag with one of each tetromino type and then shuffles it
+     */
+    public void refillBag(){
+        for (Shapes.TetrominoType i : Shapes.TetrominoType.values()){
+            bag.add(i);
+        }
+        Collections.shuffle(bag);
+    }
 
+    /**
+     * First fills the grab bag if it is empty. Then it removes the first element in the list
+     * and assigns the activePiece that tetromino type and gives starting coordinates.
+     */
     public void spawnNewPiece(){
-        //saknar bag funktion i shapes
+        if (bag.isEmpty()){
+            refillBag();
+        }
+        Shapes.TetrominoType nextType = bag.remove(0);
+        activePiece = new Shapes(nextType, 4, 0);
     }
 }
