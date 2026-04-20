@@ -3,6 +3,8 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,8 +15,8 @@ import javax.swing.Timer;
  * Represents the game board consisting of a grid of colors.
  * Provides functionality to manage and reset the board state.
  */
-public class Board extends JPanel implements ActionListener{
-    private List<Shapes.TetrominoType> bag = new ArrayList();
+public class Board extends JPanel implements ActionListener, KeyListener{
+    private List<Shapes.TetrominoType> bag = new ArrayList<Shapes.TetrominoType>();
     final static int col = 10;
     final static int row = 20;
     private Color[][] grid = new Color[row][col];
@@ -25,7 +27,9 @@ public class Board extends JPanel implements ActionListener{
     private Timer timer;
     private Shapes activePiece;
     private boolean isGameRunning;
-
+    private int moveCounter = 0;
+    private int lowestLevel = 0;
+    
     /**
    * Constructs a new Board and initializes the preferred size and background color.
    */
@@ -37,6 +41,8 @@ public class Board extends JPanel implements ActionListener{
         initGrid();
 
         this.timer = new Timer(delay, this);
+        this.addKeyListener(this);
+        this.setFocusable(true);
     }
 
     /**
@@ -53,10 +59,175 @@ public class Board extends JPanel implements ActionListener{
    */
     @Override
     public void actionPerformed(ActionEvent e){
-        //movePieceDown();  <-- call for function that moves piece down
+        int[] anchor = activePiece.getAnchor();
+        anchor[1]++;
+        if (isValidMove(anchor)){
+            activePiece.moveDown();
+            updateLowest();
+        }
+        repaint();
+    }
+
+    /**
+    * Invoked every time a key is pressed.
+    */
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int key = e.getKeyCode();
+
+        if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_DOWN) { // Movement key is pressed
+            movement(key);
+        } else if (key == KeyEvent.VK_SPACE) { // Hard drop is pressed
+            for (int i = 0; i < 20; i++) {
+                movement(KeyEvent.VK_DOWN);
+                // if (lowestLevel == 19) {
+                //     // Lock piece here? 
+                //     break;
+                // }
+            }         
+        } else if (key == KeyEvent.VK_UP || key == KeyEvent.VK_Z) { // Rotation key is pressed
+            rotation(key);
+        } else if (key == KeyEvent.VK_C) { // Hold key pressed 
+            // Hold function here 
+        } else { // Any other key on the keyboard, do nothing 
+            return; 
+        }
+        
         repaint();
     }
     
+    @Override
+    public void keyReleased(KeyEvent e) {} // Ignored
+
+    @Override
+    public void keyTyped(KeyEvent e){} // Ignored
+
+    /**
+    * Moves a tetromino left, right or down.
+    * @param key the key the user has pressed.
+    */
+    private void movement(int key) {
+        int[] anchor = activePiece.getAnchor();
+
+        if (key == KeyEvent.VK_LEFT) {
+            anchor[0]--;
+            if (isValidMove(anchor)) {
+                activePiece.moveLeft();
+                incrementMoveCounter();
+            }
+        } else if (key == KeyEvent.VK_RIGHT) {
+            anchor[0]++;
+            if (isValidMove(anchor)) {
+                activePiece.moveRight();
+                incrementMoveCounter();
+            }
+        } else if (key == KeyEvent.VK_DOWN) {
+            anchor[1]++;
+            if (isValidMove(anchor)) {
+                activePiece.moveDown();
+                updateLowest();
+            }
+        }
+    }
+
+    /**
+     * Handles clockwise and counterclockwise rotation
+     * @param key
+     */
+    private void rotation(int key) {
+        boolean success = false;
+
+        int rotationFrom = activePiece.getRotation();
+        int[] anchor = activePiece.getAnchor();
+            
+        if (key == KeyEvent.VK_UP){
+            activePiece.rotateRight();
+        } else {
+            activePiece.rotateLeft();
+        }
+
+        int rotationTo = activePiece.getRotation();
+        int[][] rotationPoints = activePiece.getRotationPoints(rotationFrom, rotationTo);
+
+        
+        // Super rotation system kick tests
+        for (int[] points : rotationPoints) {
+            int[] anchor2 = {anchor[0] + points[0], anchor[1] + points[1]};
+            if (isValidMove(anchor2)) {
+                activePiece.setAnchor(points[0] + anchor[0], points[1] + anchor[1]);
+                success = true;
+                incrementMoveCounter();
+                break;
+            }
+        }
+    
+        // Undo rotation if failed
+        if (success == false) {
+            if (((rotationFrom + 1) % 4) == rotationTo) {
+                activePiece.rotateLeft();
+            } else {
+                activePiece.rotateRight();
+            }
+        }
+    }
+
+    /**
+     * Checks if every block of the active tetromino is in a valid position after movement/rotation.
+     * @param anchor the new anchor position of activePiece being tested
+     * @return true if move is valid; false otherwise
+     */
+    private boolean isValidMove(int[] anchor) {
+        int x1 = anchor[0];
+        int y1 = anchor[1];
+
+        for (int[] block: activePiece.getBlocks()) {
+            int x2 = x1 + block[0];
+            int y2 = y1 + block[1];
+            if (x2 < 0 || x2 > 9) {
+                return false;
+            } else if (y2 > 19) {
+                return false;
+            } else if (grid[y2][x2] != Color.BLACK) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Updates the lowest y-value reached by the activePiece.
+     * Resets moveCounter if activePiece goes to a new lowest y-value.
+     */
+    private void updateLowest() {
+        int lowest = 0;
+        int height = activePiece.getY();
+
+        for (int[] block: activePiece.getBlocks()) {
+            if (lowest < (height + block[1])) {
+                lowest = height + block[1];
+            }
+        }
+
+        if (lowest > lowestLevel) {
+            lowestLevel = lowest;
+            moveCounter = 0;
+        }
+    }
+
+    /**
+     * Helps to increment moveCounter.
+     * @return true if activePiece should lock
+     */
+    // Maybe remade to void and get rid of bool because hard drop is harder to make with this?
+    private boolean incrementMoveCounter() {
+        moveCounter++;
+        if (moveCounter == 15) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Resets the entire grid by filling every cell with the default black color.
      */
@@ -153,6 +324,7 @@ public class Board extends JPanel implements ActionListener{
             refillBag();
         }
         Shapes.TetrominoType nextType = bag.remove(0);
-        activePiece = new Shapes(nextType, 4, 0);
+        activePiece = new Shapes(nextType, 4, 1);
+        lowestLevel = activePiece.getY();
     }
 }

@@ -21,5 +21,6 @@ public class Tetris {
     window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     window.setLocationRelativeTo(null);
     window.setVisible(true);
+    board.startGame();
   }
 }
