@@ -23,8 +23,9 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     final static int width = 300;
     final static int height = 600;
     final static int cellRadius = 30;
-    final static int delay = 500;
-    private Timer timer;
+    final static int tickDelay = 500;
+    final static int lockDelay = 500;
+    private Timer tickTimer, lockTimer;
     private Shapes activePiece;
     private boolean isGameRunning;
     private int moveCounter = 0;
@@ -40,7 +41,11 @@ public class Board extends JPanel implements ActionListener, KeyListener{
 
         initGrid();
 
-        this.timer = new Timer(delay, this);
+        this.lockTimer = new Timer(lockDelay, e -> {
+            lockActivePiece();
+        });
+        this.lockTimer.setRepeats(false);
+        this.tickTimer = new Timer(tickDelay, this);
         this.addKeyListener(this);
         this.setFocusable(true);
     }
@@ -51,7 +56,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     public void startGame(){
         isGameRunning = true;
         spawnNewPiece();
-        timer.start();
+        tickTimer.start();
     }
 
     /**
@@ -64,6 +69,14 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         if (isValidMove(anchor)){
             activePiece.moveDown();
             updateLowest();
+            
+            if(lockTimer.isRunning()){
+                lockTimer.stop();
+            }  
+        } else{
+            if(!lockTimer.isRunning()){
+                lockTimer.start();
+            }
         }
         repaint();
     }
@@ -80,11 +93,8 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         } else if (key == KeyEvent.VK_SPACE) { // Hard drop is pressed
             for (int i = 0; i < 20; i++) {
                 movement(KeyEvent.VK_DOWN);
-                // if (lowestLevel == 19) {
-                //     // Lock piece here? 
-                //     break;
-                // }
             }         
+            lockActivePiece();
         } else if (key == KeyEvent.VK_UP || key == KeyEvent.VK_Z) { // Rotation key is pressed
             rotation(key);
         } else if (key == KeyEvent.VK_C) { // Hold key pressed 
@@ -113,13 +123,17 @@ public class Board extends JPanel implements ActionListener, KeyListener{
             anchor[0]--;
             if (isValidMove(anchor)) {
                 activePiece.moveLeft();
-                incrementMoveCounter();
+                if(lockTimer.isRunning() && incrementMoveCounter()){
+                    lockTimer.restart();
+                }
             }
         } else if (key == KeyEvent.VK_RIGHT) {
             anchor[0]++;
             if (isValidMove(anchor)) {
                 activePiece.moveRight();
-                incrementMoveCounter();
+                if(lockTimer.isRunning() && incrementMoveCounter()){
+                    lockTimer.restart();
+                }
             }
         } else if (key == KeyEvent.VK_DOWN) {
             anchor[1]++;
@@ -156,7 +170,9 @@ public class Board extends JPanel implements ActionListener, KeyListener{
             if (isValidMove(anchor2)) {
                 activePiece.setAnchor(points[0] + anchor[0], points[1] + anchor[1]);
                 success = true;
-                incrementMoveCounter();
+                if(lockTimer.isRunning() && incrementMoveCounter()){
+                    lockTimer.restart();
+                }
                 break;
             }
         }
@@ -222,10 +238,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     // Maybe remade to void and get rid of bool because hard drop is harder to make with this?
     private boolean incrementMoveCounter() {
         moveCounter++;
-        if (moveCounter == 15) {
-            return true;
-        }
-        return false;
+        return moveCounter < 15;
     }
 
     /**
@@ -292,16 +305,16 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         int y = anchor[1];
         int blocks[][] = activePiece.getBlocks();
 
-        g.setColor(Color.blue);//ska ändras till shapes specifika färg.
+        //ska ändras till shapes specifika färg.
         for(int[] block : blocks){
             int drawX = (x + block[0]) * cellRadius;
             int drawY = (y + block[1]) * cellRadius;
 
+            g.setColor(Color.blue);
             g.fillRect(drawX, drawY, cellRadius, cellRadius);
-
+            
             g.setColor(Color.GRAY);
             g.drawRect(drawX, drawY, cellRadius, cellRadius);
-            g.setColor(Color.CYAN);
         }
     }
     
@@ -326,5 +339,24 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         Shapes.TetrominoType nextType = bag.remove(0);
         activePiece = new Shapes(nextType, 4, 1);
         lowestLevel = activePiece.getY();
+    }
+
+    public void lockActivePiece(){
+        lockTimer.stop();
+
+        int anchor[] = activePiece.getAnchor();
+        int blocks[][] = activePiece.getBlocks();
+        //get the specfic color of tetrominoe here
+        for(int[] block : blocks){
+            int gridX = anchor[0] + block[0];
+            int gridY = anchor[1] + block[1];
+
+            grid[gridY][gridX] = Color.BLUE;
+        }
+
+        moveCounter = 0;
+        lowestLevel = 0;
+        //line clearing check call here.
+        spawnNewPiece();
     }
 }
