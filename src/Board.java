@@ -299,12 +299,19 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         }
     }
 
+    /**
+     * Renders the menu overlay when the game is not active.
+     */
     public void drawStartMenu(Graphics g){
         g.setColor(Color.WHITE);
         g.drawString("TETRIS", (width / 2) - 20, (height / 2) - 60);
         g.drawString("PRESS ENTER TO PLAY", (width / 2) - 70, height / 2);
     }
 
+    /**
+     * Terminates the active game loop.
+     * Stops all timers and updates the game state to trigger the Game Over overlay.
+     */
     private void gameOver(){
         isGameRunning = false;
         tickTimer.stop();
@@ -330,7 +337,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
             int drawX = (x + block[0]) * cellRadius;
             int drawY = (y + block[1]) * cellRadius;
 
-            g.setColor(Color.blue);
+            g.setColor(activePiece.getColor());
             g.fillRect(drawX, drawY, cellRadius, cellRadius);
             
             g.setColor(Color.GRAY);
@@ -349,8 +356,8 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     }
 
     /**
-     * First fills the grab bag if it is empty. Then it removes the first element in the list
-     * and assigns the activePiece that tetromino type and gives starting coordinates.
+     * Spawns a new tetromino from the bag and checks for collision.
+     * If the starting position is occupied, the game triggers a Game Over state.
      */
     public void spawnNewPiece(){
         if (bag.isEmpty()){
@@ -374,12 +381,12 @@ public class Board extends JPanel implements ActionListener, KeyListener{
 
         int anchor[] = activePiece.getAnchor();
         int blocks[][] = activePiece.getBlocks();
-        //get the specfic color of tetrominoe here
+        
         for(int[] block : blocks){
             int gridX = anchor[0] + block[0];
             int gridY = anchor[1] + block[1];
 
-            grid[gridY][gridX] = Color.BLUE;
+            grid[gridY][gridX] = activePiece.getColor();
         }
 
         moveCounter = 0;

@@ -1,3 +1,5 @@
+import java.awt.Color;
+
 /**
  * This class holds all of the necessary information to make instances of the tetrominos from tetris
  * as well as some helper functions, getters and setters.
@@ -6,9 +8,25 @@
 public class Shapes {
     // Every piece has to be at least one of these types.
     public enum TetrominoType {
-        O,I,T,L,J,S,Z
+        O(Color.YELLOW),
+        I(Color.CYAN),
+        T(Color.MAGENTA),
+        L(Color.ORANGE),
+        J(Color.BLUE),
+        S(Color.GREEN),
+        Z(Color.RED);
+
+        private final Color color;
+
+        TetrominoType(Color color) {
+            this.color = color;
+        }
+
+        public Color getColor() {
+            return color;
+        }
     }
-    
+
     private TetrominoType type;
 
     // coordinates for anchor
@@ -38,6 +56,10 @@ public class Shapes {
     // Getters & setters
     public TetrominoType getType() {
         return this.type;
+    }
+
+    public Color getColor() {
+        return this.type.getColor();
     }
     
     public int[][] getBlocks() {
