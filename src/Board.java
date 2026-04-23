@@ -305,6 +305,12 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         g.drawString("PRESS ENTER TO PLAY", (width / 2) - 70, height / 2);
     }
 
+    private void gameOver(){
+        isGameRunning = false;
+        tickTimer.stop();
+        lockTimer.stop();
+    }
+
     /**
    * Draws the active tetromino by mapping its block offsets to the grid.
    *
@@ -353,6 +359,10 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         Shapes.TetrominoType nextType = bag.remove(0);
         activePiece = new Shapes(nextType, 4, 1);
         lowestLevel = activePiece.getY();
+
+        if (!isValidMove(activePiece.getAnchor())) {
+        gameOver();
+    }
     }
 
     /**
