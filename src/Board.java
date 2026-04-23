@@ -341,6 +341,10 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         lowestLevel = activePiece.getY();
     }
 
+    /**
+     * Locks the active tetromino into the grid and resets game state for the next piece.
+     * Stops the lock timer, updates the grid with the piece's color, and spawns a new piece.
+     */
     public void lockActivePiece(){
         lockTimer.stop();
 
@@ -356,7 +360,47 @@ public class Board extends JPanel implements ActionListener, KeyListener{
 
         moveCounter = 0;
         lowestLevel = 0;
-        //line clearing check call here.
+        clearLine();
         spawnNewPiece();
+    }
+
+    /**
+     * Scans the grid for full lines, clears them by shifting upper rows down, 
+     * and clears the top row to prevent duplication.
+     */
+    public void clearLine(){
+        int linesFound = 0;
+        for (int r = row - 1; r >= 0; r--){
+            boolean isFull = true;
+
+            //checks the line for black, if no black rest of loop plays
+            for (int c = 0; c < col; c++){
+                if(grid[r][c] == Color.BLACK){
+                    isFull = false;
+                    break;
+                }
+            }
+
+            //if no black square is found then all rows will be moved one place down until current row
+            if(isFull){
+                linesFound++;
+                for (int shiftRow = r; shiftRow > 0; shiftRow--) {
+                    for (int c = 0; c < col; c++) {
+                        grid[shiftRow][c] = grid[shiftRow - 1][c];
+                    }
+                }
+
+                    //incase of immediately clearing line when piece spawns.
+                for (int c = 0; c < col; c++) {
+                    grid[0][c] = Color.BLACK;
+                }
+                //checks the same row after other rows have been shifted down and if 4 rows have been cleared then it stops.
+                r++;
+                if(linesFound == 4){
+                    break;
+                }
+            }
+            
+        }
     }
 }
