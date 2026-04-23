@@ -39,13 +39,14 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         this.setBackground(Color.BLACK);
         this.setLayout(null);
 
-        initGrid();
+        this.isGameRunning = false;
 
         this.lockTimer = new Timer(lockDelay, e -> {
             lockActivePiece();
         });
         this.lockTimer.setRepeats(false);
         this.tickTimer = new Timer(tickDelay, this);
+
         this.addKeyListener(this);
         this.setFocusable(true);
     }
@@ -54,9 +55,11 @@ public class Board extends JPanel implements ActionListener, KeyListener{
      * Starts the game loop.
      */
     public void startGame(){
+        initGrid();
         isGameRunning = true;
         spawnNewPiece();
         tickTimer.start();
+        repaint();
     }
 
     /**
@@ -88,6 +91,12 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
 
+        if (!isGameRunning){
+            if (key == KeyEvent.VK_ENTER){
+                startGame();
+            }
+            return;
+        }
         if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_DOWN) { // Movement key is pressed
             movement(key);
         } else if (key == KeyEvent.VK_SPACE) { // Hard drop is pressed
@@ -261,13 +270,12 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        drawBoard(g);
-
         if(isGameRunning){
+            drawBoard(g);
             drawActivePiece(g);
         }
         else{
-            //draw start menu.
+            drawStartMenu(g);
         }
     }
 
@@ -289,6 +297,12 @@ public class Board extends JPanel implements ActionListener, KeyListener{
                 g.drawRect(c*cellRadius, r*cellRadius, cellRadius, cellRadius);
             }
         }
+    }
+
+    public void drawStartMenu(Graphics g){
+        g.setColor(Color.WHITE);
+        g.drawString("TETRIS", (width / 2) - 20, (height / 2) - 60);
+        g.drawString("PRESS ENTER TO PLAY", (width / 2) - 70, height / 2);
     }
 
     /**
