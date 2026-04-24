@@ -273,6 +273,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         if(isGameRunning){
             drawBoard(g);
             drawActivePiece(g);
+            drawGhostPiece(g);
         }
         else{
             drawStartMenu(g);
@@ -331,8 +332,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         int x = anchor[0];
         int y = anchor[1];
         int blocks[][] = activePiece.getBlocks();
-
-        //ska ändras till shapes specifika färg.
+      
         for(int[] block : blocks){
             int drawX = (x + block[0]) * cellRadius;
             int drawY = (y + block[1]) * cellRadius;
@@ -343,6 +343,30 @@ public class Board extends JPanel implements ActionListener, KeyListener{
             g.setColor(Color.GRAY);
             g.drawRect(drawX, drawY, cellRadius, cellRadius);
         }
+    }
+
+    /**
+     * Creates a outline of the active piece of where it would land if slammed.
+     * @param g
+     */
+    public void drawGhostPiece(Graphics g){
+        int anchor[] = activePiece.getAnchor();
+        int ghostX = anchor[0];
+        int ghostY = anchor[1];
+
+        while (isValidMove(new int[]{ghostX, ghostY + 1})) {
+            ghostY++;
+        }
+
+        int blocks[][] = activePiece.getBlocks();
+
+                g.setColor(activePiece.getColor());
+                for (int[] block: blocks){
+                    int drawX = (ghostX + block[0]) * cellRadius;
+                    int drawY = (ghostY + block[1]) * cellRadius; 
+
+                    g.drawRect(drawX, drawY, cellRadius, cellRadius);
+                }
     }
     
     /**
