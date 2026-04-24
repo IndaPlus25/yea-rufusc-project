@@ -20,7 +20,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     final static int col = 10;
     final static int row = 20;
     private Color[][] grid = new Color[row][col];
-    final static int width = 300;
+    final static int width = 700;
     final static int height = 600;
     final static int cellRadius = 30;
     final static int tickDelay = 500;
@@ -414,8 +414,8 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         }
 
         moveCounter = 0;
-        lowestLevel = 0;
         clearLine();
+        lowestLevel = 0;
         spawnNewPiece();
     }
 
@@ -425,7 +425,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
      */
     public void clearLine(){
         int linesFound = 0;
-        for (int r = row - 1; r >= 0; r--){
+        for (int r = lowestLevel; r >= 0; r--){
             boolean isFull = true;
 
             //checks the line for black, if no black rest of loop plays
