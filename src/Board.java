@@ -30,6 +30,8 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     private boolean isGameRunning;
     private int moveCounter = 0;
     private int lowestLevel = 0;
+    private int score, level, linesCleared, combo = 0;
+    private boolean hardCombo;
     
     /**
    * Constructs a new Board and initializes the preferred size and background color.
@@ -100,9 +102,15 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_DOWN) { // Movement key is pressed
             movement(key);
         } else if (key == KeyEvent.VK_SPACE) { // Hard drop is pressed
+            int pastLowest = lowestLevel;
+
             for (int i = 0; i < 20; i++) {
                 movement(KeyEvent.VK_DOWN);
-            }         
+            }
+            updateLowest();
+            int dropped = lowestLevel - pastLowest;
+            score += dropped*2;
+
             lockActivePiece();
         } else if (key == KeyEvent.VK_UP || key == KeyEvent.VK_Z) { // Rotation key is pressed
             rotation(key);
@@ -148,7 +156,9 @@ public class Board extends JPanel implements ActionListener, KeyListener{
             anchor[1]++;
             if (isValidMove(anchor)) {
                 activePiece.moveDown();
+                int pastLowest = lowestLevel;
                 updateLowest();
+                score += lowestLevel - pastLowest;
             }
         }
     }
@@ -317,6 +327,12 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         isGameRunning = false;
         tickTimer.stop();
         lockTimer.stop();
+        score = 0;
+        level = 0;
+        linesCleared = 0;
+        combo = 0;
+        bag.clear();
+        refillBag();
     }
 
     /**
@@ -456,6 +472,62 @@ public class Board extends JPanel implements ActionListener, KeyListener{
                 }
             }
             
+        }
+        
+        scoreCalculation(linesFound);
+    }
+
+    /**
+     * Calculates the added score after a line has been cleared
+     * @param linesFound how many lines were cleared at the same time.
+     */
+    private void scoreCalculation(int linesFound) {
+        // Can clear max 4 lines at once, a tetris
+        int points = switch (linesFound) {
+            case 1 -> 100;
+            case 2 -> 300;
+            case 3 -> 500;
+            case 4 -> 800;
+        
+            default -> 0;
+        };
+
+        if (linesFound > 0) {
+            boolean tetris = linesFound == 4 ? true : false;
+
+            // A hardcombo is doing a difficult move/clear (currently only tetris) multiple times in a row
+            double multiplier = hardCombo && tetris ? 1.5 : 1;
+
+            score += points*level*multiplier;
+            combo++;
+
+            if (combo > 1) {
+                score += 50*combo*level;
+            }
+            
+            hardCombo = tetris;
+            
+            
+            linesCleared += linesFound;
+            int checkLevel = level;
+            level = (linesCleared / 10) + 1;
+
+            if (checkLevel != level) {
+                updateSpeed();
+            }
+        } else {
+            combo = 0;
+            hardCombo = false;
+        }
+    }
+
+    /**
+     * Updates the speed for the tick rate after reaching a new level.
+     */
+    private void updateSpeed() {
+        int[] speeds = {500, 450, 400, 350, 300, 270, 240, 220, 200, 180, 165, 150, 135, 120, 105, 95, 85, 75, 65, 60, 55, 50, 45, 40};
+        if (level < 26) {
+            tickTimer.setDelay(speeds[level - 1]);
         }
     }
 }
