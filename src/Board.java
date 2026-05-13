@@ -284,6 +284,8 @@ public class Board extends JPanel implements ActionListener, KeyListener{
             drawBoard(g);
             drawActivePiece(g);
             drawGhostPiece(g);
+            drawHUD(g);
+            drawPreview(g);
         }
         else{
             drawStartMenu(g);
@@ -311,6 +313,24 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     }
 
     /**
+     * Draws the hud elements for score, levels and lines.
+     * 
+     */
+    public void drawHUD(Graphics g){
+        g.setColor(Color.WHITE);
+        int HUDxOffset = (col * cellRadius) + 50;
+
+        g.drawString("SCORE: " + score, HUDxOffset, 400);
+        g.drawString("LEVEL: " + level, HUDxOffset, 430);
+        g.drawString("LINES: " + linesCleared, HUDxOffset, 460);
+
+        if(combo > 1) {
+            g.setColor(Color.red);
+            g.drawString("COMBO x" + combo, HUDxOffset, 490);
+        }
+    }
+
+    /**
      * Renders the menu overlay when the game is not active.
      */
     public void drawStartMenu(Graphics g){
@@ -333,6 +353,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         combo = 0;
         bag.clear();
         refillBag();
+        repaint();
     }
 
     /**
@@ -384,6 +405,30 @@ public class Board extends JPanel implements ActionListener, KeyListener{
                     g.drawRect(drawX, drawY, cellRadius, cellRadius);
                 }
     }
+
+    public void drawPreview (Graphics g) {
+        Shapes.TetrominoType nexType = bag.get(0);
+        Shapes nextPiece = new Shapes(nexType, 0, 0);
+        int previewX = (col * cellRadius) + 80;
+        int previewY = 100;
+
+        g.setColor(Color.WHITE);
+        g.drawString("NEXT PIECE:", previewX, previewY - 40);
+
+        int[][] blocks = nextPiece.getBlocks();
+        g.setColor(nextPiece.getColor());
+
+
+        for(int[] block : blocks) {
+            int drawX = previewX + (block[0] * cellRadius);
+            int drawY = previewY + (block[1] * cellRadius);
+
+            g.fillRect(drawX, drawY, cellRadius, cellRadius);
+            g.setColor(Color.GRAY);
+            g.drawRect(drawX, drawY, cellRadius, cellRadius);
+            g.setColor(nextPiece.getColor());
+        }
+    }
     
     /**
      * Refills the bag with one of each tetromino type and then shuffles it
@@ -405,6 +450,11 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         }
         Shapes.TetrominoType nextType = bag.remove(0);
         activePiece = new Shapes(nextType, 4, 1);
+
+        if (bag.isEmpty()) {
+        refillBag();
+        }
+
         lowestLevel = activePiece.getY();
 
         if (!isValidMove(activePiece.getAnchor())) {
