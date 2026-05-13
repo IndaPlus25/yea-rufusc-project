@@ -406,6 +406,9 @@ public class Board extends JPanel implements ActionListener, KeyListener{
                 }
     }
 
+    /**
+     * Draws the next piece to spawn next to the board.
+     */
     public void drawPreview (Graphics g) {
         Shapes.TetrominoType nexType = bag.get(0);
         Shapes nextPiece = new Shapes(nexType, 0, 0);
