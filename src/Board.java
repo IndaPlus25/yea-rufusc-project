@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -8,6 +9,7 @@ import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.swing.CellRendererPane;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -27,7 +29,8 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     final static int lockDelay = 500;
     private Timer tickTimer, lockTimer;
     private Shapes activePiece;
-    private boolean isGameRunning;
+    private Shapes.TetrominoType heldType = null;
+    private boolean isGameRunning, canHold = true;
     private int moveCounter = 0;
     private int lowestLevel = 0;
     private int score, level, linesCleared, combo = 0;
@@ -115,7 +118,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
         } else if (key == KeyEvent.VK_UP || key == KeyEvent.VK_Z) { // Rotation key is pressed
             rotation(key);
         } else if (key == KeyEvent.VK_C) { // Hold key pressed 
-            // Hold function here 
+            holdPiece();
         } else { // Any other key on the keyboard, do nothing 
             return; 
         }
@@ -231,6 +234,29 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     }
 
     /**
+     * Swaps the active tetromino with the piece in the hold slot.
+     * * <p>If the hold slot is empty, the current piece is stored and a new one spawns.
+     * Restricted to once per piece lock via the {@code canHold} flag.
+     */
+    public void holdPiece() {
+        if(!canHold) return;
+
+        Shapes.TetrominoType currentType = activePiece.getType();
+
+        if(heldType == null){
+            heldType = currentType;
+            spawnNewPiece();
+        } else {
+            Shapes.TetrominoType temp = heldType;
+            heldType = currentType;
+            activePiece = new Shapes(temp, 4, 1);
+        }
+
+        canHold = false;
+        repaint();
+    }
+
+    /**
      * Updates the lowest y-value reached by the activePiece.
      * Resets moveCounter if activePiece goes to a new lowest y-value.
      */
@@ -286,6 +312,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
             drawGhostPiece(g);
             drawHUD(g);
             drawPreview(g);
+            drawHold(g);
         }
         else{
             drawStartMenu(g);
@@ -313,8 +340,8 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     }
 
     /**
-     * Draws the hud elements for score, levels and lines.
-     * 
+     * Draws the HUD elements including score, level, lines, and combo.
+     * * @param g the {@code Graphics} context used for drawing
      */
     public void drawHUD(Graphics g){
         g.setColor(Color.WHITE);
@@ -407,7 +434,8 @@ public class Board extends JPanel implements ActionListener, KeyListener{
     }
 
     /**
-     * Draws the next piece to spawn next to the board.
+     * Draws the next tetromino to spawn in the sidebar.
+     * * @param g the {@code Graphics} context used for drawing
      */
     public void drawPreview (Graphics g) {
         Shapes.TetrominoType nexType = bag.get(0);
@@ -430,6 +458,41 @@ public class Board extends JPanel implements ActionListener, KeyListener{
             g.setColor(Color.GRAY);
             g.drawRect(drawX, drawY, cellRadius, cellRadius);
             g.setColor(nextPiece.getColor());
+        }
+    }
+
+    /**
+     * Draws the held tetromino in the sidebar below the preview.
+     * * <p>Renders the piece in dark gray if the hold action is currently 
+     * unavailable for the active turn.
+     * * @param g the {@code Graphics} context used for drawing
+     */
+    public void drawHold(Graphics g) {
+        int holdX = (col * cellRadius) + 80;
+        int holdY = 250;
+
+        g.setColor(Color.WHITE);
+        g.drawString("HELD PIECE:", holdX, holdY - 40);
+
+        if(heldType == null) return;
+
+        Shapes heldPiece = new Shapes(heldType, 0, 0);
+        int[][] blocks = heldPiece.getBlocks();
+        
+
+        for(int[] block : blocks) {
+            int drawX = holdX + (block[0] * cellRadius);
+            int drawY = holdY + (block[1] * cellRadius);
+
+            if(canHold){
+                g.setColor(heldPiece.getColor());
+            } else {
+                g.setColor(Color.DARK_GRAY);
+            }
+
+            g.fillRect(drawX, drawY, cellRadius, cellRadius);
+            g.setColor(Color.GRAY);
+            g.drawRect(drawX, drawY, cellRadius, cellRadius);
         }
     }
     
@@ -482,6 +545,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
             grid[gridY][gridX] = activePiece.getColor();
         }
 
+        canHold = true;
         moveCounter = 0;
         clearLine();
         lowestLevel = 0;
