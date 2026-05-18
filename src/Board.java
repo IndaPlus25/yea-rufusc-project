@@ -19,9 +19,9 @@ import javax.swing.Timer;
  */
 public class Board extends JPanel implements ActionListener, KeyListener{
     private List<Shapes.TetrominoType> bag = new ArrayList<Shapes.TetrominoType>();
-    final static int col = 10;
-    final static int row = 20;
-    private Color[][] grid = new Color[row][col];
+    final static int COLUMNS = 10;
+    final static int ROWS = 20;
+    private Color[][] grid = new Color[ROWS][COLUMNS];
     final static int width = 700;
     final static int height = 600;
     final static int cellRadius = 30;
@@ -235,7 +235,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
 
     /**
      * Swaps the active tetromino with the piece in the hold slot.
-     * * <p>If the hold slot is empty, the current piece is stored and a new one spawns.
+     * <p>If the hold slot is empty, the current piece is stored and a new one spawns.
      * Restricted to once per piece lock via the {@code canHold} flag.
      */
     public void holdPiece() {
@@ -290,8 +290,8 @@ public class Board extends JPanel implements ActionListener, KeyListener{
      * Resets the entire grid by filling every cell with the default black color.
      */
     public void initGrid(){
-        for(int r = 0; r < row; r++){
-            for (int c = 0; c < col; c++){
+        for(int r = 0; r < ROWS; r++){
+            for (int c = 0; c < COLUMNS; c++){
                 grid[r][c] = Color.BLACK;
             }
         }
@@ -328,8 +328,8 @@ public class Board extends JPanel implements ActionListener, KeyListener{
    */
     public void drawBoard(Graphics g){
         g.setColor(Color.GRAY);
-        for(int r = 0; r < row; r++) {
-            for (int c = 0; c < col; c++){
+        for(int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLUMNS; c++){
                 g.setColor(grid[r][c]);
                 g.fillRect(c* cellRadius, r * cellRadius, cellRadius, cellRadius);
 
@@ -341,11 +341,11 @@ public class Board extends JPanel implements ActionListener, KeyListener{
 
     /**
      * Draws the HUD elements including score, level, lines, and combo.
-     * * @param g the {@code Graphics} context used for drawing
+     * @param g the {@code Graphics} context used for drawing
      */
     public void drawHUD(Graphics g){
         g.setColor(Color.WHITE);
-        int HUDxOffset = (col * cellRadius) + 50;
+        int HUDxOffset = (COLUMNS * cellRadius) + 50;
 
         g.drawString("SCORE: " + score, HUDxOffset, 400);
         g.drawString("LEVEL: " + level, HUDxOffset, 430);
@@ -435,12 +435,12 @@ public class Board extends JPanel implements ActionListener, KeyListener{
 
     /**
      * Draws the next tetromino to spawn in the sidebar.
-     * * @param g the {@code Graphics} context used for drawing
+     * @param g the {@code Graphics} context used for drawing
      */
     public void drawPreview (Graphics g) {
-        Shapes.TetrominoType nexType = bag.get(0);
-        Shapes nextPiece = new Shapes(nexType, 0, 0);
-        int previewX = (col * cellRadius) + 80;
+        Shapes.TetrominoType nextType = bag.get(0);
+        Shapes nextPiece = new Shapes(nextType, 0, 0);
+        int previewX = (COLUMNS * cellRadius) + 80;
         int previewY = 100;
 
         g.setColor(Color.WHITE);
@@ -463,12 +463,12 @@ public class Board extends JPanel implements ActionListener, KeyListener{
 
     /**
      * Draws the held tetromino in the sidebar below the preview.
-     * * <p>Renders the piece in dark gray if the hold action is currently 
+     * <p>Renders the piece in dark gray if the hold action is currently 
      * unavailable for the active turn.
-     * * @param g the {@code Graphics} context used for drawing
+     * @param g the {@code Graphics} context used for drawing
      */
     public void drawHold(Graphics g) {
-        int holdX = (col * cellRadius) + 80;
+        int holdX = (COLUMNS * cellRadius) + 80;
         int holdY = 250;
 
         g.setColor(Color.WHITE);
@@ -562,7 +562,7 @@ public class Board extends JPanel implements ActionListener, KeyListener{
             boolean isFull = true;
 
             //checks the line for black, if no black rest of loop plays
-            for (int c = 0; c < col; c++){
+            for (int c = 0; c < COLUMNS; c++){
                 if(grid[r][c] == Color.BLACK){
                     isFull = false;
                     break;
@@ -573,13 +573,13 @@ public class Board extends JPanel implements ActionListener, KeyListener{
             if(isFull){
                 linesFound++;
                 for (int shiftRow = r; shiftRow > 0; shiftRow--) {
-                    for (int c = 0; c < col; c++) {
+                    for (int c = 0; c < COLUMNS; c++) {
                         grid[shiftRow][c] = grid[shiftRow - 1][c];
                     }
                 }
 
                     //incase of immediately clearing line when piece spawns.
-                for (int c = 0; c < col; c++) {
+                for (int c = 0; c < COLUMNS; c++) {
                     grid[0][c] = Color.BLACK;
                 }
                 //checks the same row after other rows have been shifted down and if 4 rows have been cleared then it stops.
